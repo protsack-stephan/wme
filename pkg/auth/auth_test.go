@@ -91,6 +91,7 @@ func (s *authClientLoginTestSuite) TestLogin() {
 
 	if s.err != nil {
 		s.Assert().Contains(err.Error(), s.err.Error())
+		s.Assert().Contains(err.Error(), http.StatusText(s.sts))
 	} else {
 		s.Assert().NoError(err)
 	}
@@ -161,6 +162,7 @@ func (s *authClientRefreshTokenTestSuite) TestRefreshToken() {
 
 	if s.err != nil {
 		s.Assert().Contains(err.Error(), s.err.Error())
+		s.Assert().Contains(err.Error(), http.StatusText(s.sts))
 	} else {
 		s.Assert().NoError(err)
 	}
@@ -185,9 +187,68 @@ func TestAuthClientRefreshToken(t *testing.T) {
 		{
 			req: &auth.RefreshTokenRequest{
 				Username:     "test",
-				RefreshToken: "password",
+				RefreshToken: "refresh_token",
 			},
 			res: nil,
+			err: errors.New("Not valid request!"),
+			sts: http.StatusUnprocessableEntity,
+		},
+	} {
+		suite.Run(t, testCase)
+	}
+}
+
+type authClientRevokeTokenTestSuite struct {
+	suite.Suite
+	srv *httptest.Server
+	acl *auth.Client
+	ctx context.Context
+	req *auth.RevokeTokenRequest
+	sts int
+	err error
+}
+
+func (s *authClientRevokeTokenTestSuite) SetupSuite() {
+	gin.SetMode(gin.TestMode)
+
+	rtr := gin.New()
+	rtr.POST("/token-revoke", NewHandler(s.Assertions, s.sts, s.req, nil, s.err))
+
+	s.ctx = context.Background()
+	s.srv = httptest.NewServer(rtr)
+	s.acl = &auth.Client{
+		HTTPClient: &http.Client{},
+		BaseURL:    s.srv.URL,
+	}
+}
+
+func (s *authClientRevokeTokenTestSuite) TearDownSuite() {
+	s.srv.Close()
+}
+
+func (s *authClientRevokeTokenTestSuite) TestRevokeToken() {
+	err := s.acl.RevokeToken(s.ctx, s.req)
+
+	if s.err != nil {
+		s.Assert().Contains(err.Error(), s.err.Error())
+		s.Assert().Contains(err.Error(), http.StatusText(s.sts))
+	} else {
+		s.Assert().NoError(err)
+	}
+}
+
+func TestAuthClientRevokeToken(t *testing.T) {
+	for _, testCase := range []*authClientRevokeTokenTestSuite{
+		{
+			req: &auth.RevokeTokenRequest{
+				RefreshToken: "refresh_token",
+			},
+			sts: http.StatusOK,
+		},
+		{
+			req: &auth.RevokeTokenRequest{
+				RefreshToken: "refresh_token",
+			},
 			err: errors.New("Not valid request!"),
 			sts: http.StatusUnprocessableEntity,
 		},
