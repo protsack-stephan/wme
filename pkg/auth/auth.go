@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -54,14 +55,20 @@ type Client struct {
 	HTTPClient *http.Client
 }
 
-func (c *Client) post(url string, v interface{}) (*http.Response, error) {
+func (c *Client) post(ctx context.Context, url string, v interface{}) (*http.Response, error) {
 	body := bytes.NewBuffer([]byte{})
 
 	if err := json.NewEncoder(body).Encode(v); err != nil {
 		return nil, err
 	}
 
-	res, err := c.HTTPClient.Post(fmt.Sprintf("%s%s", c.BaseURL, url), "application/json", body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.BaseURL, url), body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.HTTPClient.Do(req)
 
 	if err != nil {
 		return nil, err
@@ -82,8 +89,8 @@ func (c *Client) post(url string, v interface{}) (*http.Response, error) {
 }
 
 // Login triggers login endpoint and returns fresh set of tokens.
-func (c *Client) Login(req *LoginRequest) (*LoginResponse, error) {
-	res, err := c.post("/login", req)
+func (c *Client) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
+	res, err := c.post(ctx, "/login", req)
 
 	if err != nil {
 		return nil, err
@@ -99,15 +106,9 @@ func (c *Client) Login(req *LoginRequest) (*LoginResponse, error) {
 	return rsp, nil
 }
 
-// RevokeToken invalidates refresh token and all related access tokens.
-func (c *Client) RevokeToken(req *RevokeTokenRequest) error {
-	_, err := c.post("/token-revoke", req)
-	return err
-}
-
 // RefreshToken gets new set of tokens using refresh token.
-func (c *Client) RefreshToken(req *RefreshTokenRequest) (*RefreshTokenResponse, error) {
-	res, err := c.post("/token-refresh", req)
+func (c *Client) RefreshToken(ctx context.Context, req *RefreshTokenRequest) (*RefreshTokenResponse, error) {
+	res, err := c.post(ctx, "/token-refresh", req)
 
 	if err != nil {
 		return nil, err
@@ -121,4 +122,10 @@ func (c *Client) RefreshToken(req *RefreshTokenRequest) (*RefreshTokenResponse, 
 	}
 
 	return rsp, nil
+}
+
+// RevokeToken invalidates refresh token and all related access tokens.
+func (c *Client) RevokeToken(ctx context.Context, req *RevokeTokenRequest) error {
+	_, err := c.post(ctx, "/token-revoke", req)
+	return err
 }
