@@ -68,6 +68,7 @@ func (c *Client) post(ctx context.Context, url string, v interface{}) (*http.Res
 		return nil, err
 	}
 
+	req.Header.Set("Content-type", "application/json")
 	res, err := c.HTTPClient.Do(req)
 
 	if err != nil {
