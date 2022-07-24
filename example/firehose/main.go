@@ -37,7 +37,7 @@ func main() {
 		log.Println(*evt.Data)
 	}
 
-	if err := fhs.PageVisibility(ctx, time.Now(), cb); err != nil {
+	if err := fhs.PageUpdate(ctx, time.Now(), cb); err != nil {
 		log.Panic(err)
 	}
 }

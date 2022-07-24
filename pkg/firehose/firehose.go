@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -60,6 +61,16 @@ func (c *Client) subscribe(ctx context.Context, since time.Time, url string, cb 
 	}
 
 	defer res.Body.Close()
+
+	if res.StatusCode < http.StatusOK || res.StatusCode > http.StatusIMUsed {
+		data, err := ioutil.ReadAll(res.Body)
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("%s: %s", res.Status, string(data))
+	}
 
 	scn := bufio.NewScanner(res.Body)
 	buf := []byte{}
