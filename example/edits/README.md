@@ -2,7 +2,7 @@
 
 Example of an app that will count number of edits per article  just to showcase the abilities of the API.
 
-### Getting started:
+### Getting started
 
 1. First just export environment variables:
 

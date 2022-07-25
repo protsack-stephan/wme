@@ -2,6 +2,8 @@
 
 Showcase of connection to single real time event stream. 
 
+### Getting started
+
 1. First just export environment variables:
 
     ```bash

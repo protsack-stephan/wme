@@ -2,6 +2,7 @@
 
 This is very basic Auth API SDK that will allow you to quickly get started with WME authentication.
 
+### Getting started
 
 1. Login example:
 

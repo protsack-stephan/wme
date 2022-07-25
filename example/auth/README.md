@@ -2,7 +2,7 @@
 
 Simple piece of code that shows a really basic way to login, revoke token and refresh token with WME Authentication API.
 
-### Getting started:
+### Getting started
 
 1. First just export environment variables:
 
