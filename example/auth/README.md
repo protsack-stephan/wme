@@ -1,6 +1,6 @@
 # Wikimedia Enterprise Authentication API example
 
-Simple piece of code that shows a simple way to login, revoke token and refresh token with WME Authentication API.
+Simple piece of code that shows a really basic way to login, revoke token and refresh token with WME Authentication API.
 
 ### Getting started:
 
@@ -17,7 +17,7 @@ Simple piece of code that shows a simple way to login, revoke token and refresh 
     go run main.go
     ```
 
-1. Note that if you are running this from the root use:
+1. Note that if you are running this from the root use this command:
     ```bash
     go run example/auth/main.go
     ```

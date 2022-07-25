@@ -1,6 +1,6 @@
 # Wikimedia Enterprise Firehose Application example
 
-Example of an app that will count number of edits per article. Just to showcase the abilities of the API.
+Example of an app that will count number of edits per article  just to showcase the abilities of the API.
 
 ### Getting started:
 
@@ -23,7 +23,7 @@ Example of an app that will count number of edits per article. Just to showcase 
     go run example/edits/main.go
     ```
 
-1. After that `articles.db` file will be created. You'll need [SQLite CLI](https://www.sqlite.org/cli.html) installed or some other `SQLite` client to run the following queries on newly created file:
+1. After that `articles.db` file will be created. You'll need [SQLite CLI](https://www.sqlite.org/cli.html) or some other `SQLite` client installed to run the following queries on newly created file:
     
     * List of [top 10](list.sql) edited articles.
     * [Number of edits](language.sql) per language.
