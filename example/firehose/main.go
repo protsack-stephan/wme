@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"time"
@@ -33,11 +34,11 @@ func main() {
 	fhs.SetAccessToken(lgn.AccessToken)
 
 	cb := func(evt *firehose.Event) {
-		log.Println(*evt)
-		log.Println(*evt.Data)
+		ids, _ := json.Marshal(evt.Data)
+		log.Println(string(ids))
 	}
 
-	if err := fhs.PageUpdate(ctx, time.Now(), cb); err != nil {
+	if err := fhs.PageDelete(ctx, time.Now(), cb); err != nil {
 		log.Panic(err)
 	}
 }
