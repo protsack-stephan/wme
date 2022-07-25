@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
+	"net/url"
 	"os"
 	"time"
 
 	"github.com/protsack-stephan/wme/pkg/auth"
 	"github.com/protsack-stephan/wme/pkg/firehose"
-	"github.com/protsack-stephan/wme/schema/v1"
 )
 
 func main() {
@@ -35,20 +34,15 @@ func main() {
 	fhs.SetAccessToken(lgn.AccessToken)
 
 	cb := func(evt *firehose.Event) {
-		ids, _ := json.Marshal(evt.Data)
-		log.Println(string(ids))
-
-		pg := &schema.Page{
-			Identifier: evt.Data.Identifier,
-			Name:       evt.Data.Name,
-			URL:        evt.Data.URL,
-		}
-		data, _ := json.Marshal(pg)
-		log.Println(string(data))
-		log.Println()
+		link, _ := url.QueryUnescape(evt.Data.URL)
+		log.Printf("name: %s, identifier: %d, url: %s, dt: %s",
+			evt.Data.Name,
+			evt.Data.Identifier,
+			link,
+			evt.ID[0].Dt.Format(time.RFC3339))
 	}
 
-	if err := fhs.PageDelete(ctx, time.Now(), cb); err != nil {
+	if err := fhs.PageUpdate(ctx, time.Now(), cb); err != nil {
 		log.Panic(err)
 	}
 }
