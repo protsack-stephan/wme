@@ -22,7 +22,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	_, err = ath.RefreshToken(ctx, &auth.RefreshTokenRequest{
+	rft, err := ath.RefreshToken(ctx, &auth.RefreshTokenRequest{
 		Username:     os.Getenv("WME_USERNAME"),
 		RefreshToken: lgn.RefreshToken,
 	})
@@ -30,6 +30,8 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	log.Println(rft)
 
 	err = ath.RevokeToken(ctx, &auth.RevokeTokenRequest{
 		RefreshToken: lgn.RefreshToken,
