@@ -1,0 +1,1 @@
+SELECT * FROM articles ORDER BY edits DESC LIMIT 10;
