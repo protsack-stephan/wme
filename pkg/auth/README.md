@@ -26,7 +26,7 @@ This is very basic Auth API SDK that will allow you to quickly get started with 
     ath := auth.NewClient()
 
     err := ath.RevokeToken(ctx, &auth.RevokeTokenRequest{
-      RefreshToken: lgn.RefreshToken,
+      RefreshToken: os.Getenv("WME_REFRESH_TOKEN"),
     })
 
     if err != nil {
@@ -41,12 +41,12 @@ This is very basic Auth API SDK that will allow you to quickly get started with 
 
     rft, err := ath.RefreshToken(ctx, &auth.RefreshTokenRequest{
       Username:     os.Getenv("WME_USERNAME"),
-      RefreshToken: lgn.RefreshToken,
+      RefreshToken: os.Getenv("WME_REFRESH_TOKEN"),
     })
 
     if err != nil {
       log.Panic(err)
     }
 
-    log.Println(rft)
+    log.Println(*rft)
     ```
