@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/protsack-stephan/wme/schema"
+	"github.com/protsack-stephan/wme/schema/v1"
 )
 
 // EventID shows metadata for the event.
@@ -24,7 +24,7 @@ type EventID struct {
 
 // Event server side event structure for firehose.
 type Event struct {
-	ID   []EventID    `json:"id"`
+	ID   []*EventID   `json:"id"`
 	Data *schema.Page `json:"data"`
 }
 

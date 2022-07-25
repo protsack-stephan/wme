@@ -14,8 +14,8 @@ func main() {
 	ath := auth.NewClient()
 
 	lgn, err := ath.Login(ctx, &auth.LoginRequest{
-		Username: os.Getenv("USERNAME"),
-		Password: os.Getenv("PASSWORD"),
+		Username: os.Getenv("WME_USERNAME"),
+		Password: os.Getenv("WME_PASSWORD"),
 	})
 
 	if err != nil {
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	_, err = ath.RefreshToken(ctx, &auth.RefreshTokenRequest{
-		Username:     os.Getenv("USERNAME"),
+		Username:     os.Getenv("WME_USERNAME"),
 		RefreshToken: lgn.RefreshToken,
 	})
 

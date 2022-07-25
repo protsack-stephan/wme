@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"os"
 	"time"
 
 	"github.com/protsack-stephan/wme/pkg/auth"
 	"github.com/protsack-stephan/wme/pkg/firehose"
-	"github.com/protsack-stephan/wme/schema/v1"
 )
 
 func main() {
@@ -17,7 +15,6 @@ func main() {
 
 	ctx := context.Background()
 	ath := auth.NewClient()
-
 	lgn, err := ath.Login(ctx, &auth.LoginRequest{
 		Username: os.Getenv("WME_USERNAME"),
 		Password: os.Getenv("WME_PASSWORD"),
@@ -31,24 +28,29 @@ func main() {
 		RefreshToken: lgn.RefreshToken,
 	})
 
+	if err != nil {
+		log.Panic(err)
+	}
+
 	fhs := firehose.NewClient()
 	fhs.SetAccessToken(lgn.AccessToken)
 
-	cb := func(evt *firehose.Event) {
-		ids, _ := json.Marshal(evt.Data)
-		log.Println(string(ids))
+	cmr := firehose.NewConnectionManger()
+	cmr.Add(&firehose.Connection{
+		Since:   time.Now(),
+		Stream:  fhs.PageUpdate,
+		Handler: func(evt *firehose.Event) {},
+	})
+	cmr.Add(&firehose.Connection{
+		Since:   time.Now(),
+		Stream:  fhs.PageDelete,
+		Handler: func(evt *firehose.Event) {},
+	})
 
-		pg := &schema.Page{
-			Identifier: evt.Data.Identifier,
-			Name:       evt.Data.Name,
-			URL:        evt.Data.URL,
-		}
-		data, _ := json.Marshal(pg)
-		log.Println(string(data))
-		log.Println()
-	}
+	errs := make(chan error, 10000)
+	go cmr.Connect(ctx, errs)
 
-	if err := fhs.PageDelete(ctx, time.Now(), cb); err != nil {
-		log.Panic(err)
+	for err := range errs {
+		log.Println(err)
 	}
 }
