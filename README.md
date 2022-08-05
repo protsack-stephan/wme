@@ -1,9 +1,7 @@
 # Wikimedia Enterprise API examples
 
-This repository contains examples of how WME realtime API can be used in real world scenarios. Note that all of the code inside this repository is not production ready. Although large parts of the code are covered with unit tests, this code was not tested in real world applications, so use it at your own risk.
-
-The repository also has examples of working with on-demand API.
-
+This is a repository of SDKs for wikimedia enterprise APIs. At the moment, it includes SDKs for authentication, realtime and on-demand APIs. It also includes examples for working with these APIs. 
+Note that all of the code inside this repository is not production ready. Although large parts of the code are covered with unit tests, this code was not tested in real world applications, so use it at your own risk.
 
 ### Code samples
 
