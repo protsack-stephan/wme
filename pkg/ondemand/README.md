@@ -11,7 +11,7 @@ ii) Available projects - get list of available projects with their identifier, l
 1. First, create an ondemand client and associate an access token to it:
 
     ```go
-  ctx := context.Background()
+  	ctx := context.Background()
 	ath := auth.NewClient()
 
 	lgn, err := ath.Login(ctx, &auth.LoginRequest{
@@ -22,14 +22,14 @@ ii) Available projects - get list of available projects with their identifier, l
 		log.Panic(err)
 	}
 	
-  od := ondemand.NewClient()
+  	od := ondemand.NewClient()
 	od.SetAccessToken(lgn.AccessToken)
     ```
 
 2. Article look up example:
 
   ```go
-  req := &ondemand.ArticleRequest{
+  	req := &ondemand.ArticleRequest{
 		Project: "enwiki",
 		Name:    "Steamship",
 	}
@@ -49,7 +49,7 @@ ii) Available projects - get list of available projects with their identifier, l
 3. Getting total number of available projects example:
 
 ```go
-  res, err := od.Projects(ctx)
+  	res, err := od.Projects(ctx)
 	if err != nil {
 		log.Println(err)
 	}

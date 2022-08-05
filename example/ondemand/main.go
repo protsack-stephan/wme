@@ -54,7 +54,7 @@ func main() {
 	}
 
 	fmt.Println("\n\nTotal number of projects: ", len(prjs))
-	fmt.Println(" Names : identifier pairs of all the projects are as follows:")
+	fmt.Println("Names : identifier pairs of all the projects:")
 	for _, project := range prjs {
 		fmt.Println(project.Name, " : ", project.Identifier)
 	}

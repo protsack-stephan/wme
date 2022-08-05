@@ -112,7 +112,7 @@ func (c *Client) Projects(ctx context.Context) ([]*schema.Project, error) {
 		return nil, err
 	}
 
-	// while the array contains projct objects
+	// while the array contains project objects
 	for dec.More() {
 		project := new(schema.Project)
 
