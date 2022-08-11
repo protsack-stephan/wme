@@ -19,6 +19,7 @@ func main() {
 		Username: os.Getenv("WME_USERNAME"),
 		Password: os.Getenv("WME_PASSWORD"),
 	})
+
 	if err != nil {
 		log.Panic(err)
 	}
@@ -27,16 +28,15 @@ func main() {
 		RefreshToken: lgn.RefreshToken,
 	})
 
-	od := ondemand.NewClient()
-	od.SetAccessToken(lgn.AccessToken)
-
-	req := &ondemand.ArticleRequest{
-		Project: "enwiki",
-		Name:    "Steamship",
-	}
+	odc := ondemand.NewClient()
+	odc.SetAccessToken(lgn.AccessToken)
 
 	// Article look up using SDK
-	res, err := od.Article(ctx, req)
+	res, err := odc.Article(ctx, &ondemand.ArticleRequest{
+		Project: "enwiki",
+		Name:    "Steamship",
+	})
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -48,14 +48,16 @@ func main() {
 	)
 
 	// Projects look up using SDK
-	prjs, err := od.Projects(ctx)
+	prs, err := odc.Projects(ctx)
+
 	if err != nil {
 		log.Println(err)
 	}
 
-	fmt.Println("\n\nTotal number of projects: ", len(prjs))
+	fmt.Println("\n\nTotal number of projects: ", len(prs))
 	fmt.Println("Names : identifier pairs of all the projects:")
-	for _, project := range prjs {
-		fmt.Println(project.Name, " : ", project.Identifier)
+
+	for _, prj := range prs {
+		fmt.Println(prj.Name, " : ", prj.Identifier)
 	}
 }

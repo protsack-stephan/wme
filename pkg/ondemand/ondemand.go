@@ -81,6 +81,7 @@ func (c *Client) GetAccessToken() string {
 // Article triggers /pages/meta/{project}/{name} endpoint and returns current revision of an article.
 func (c *Client) Article(ctx context.Context, req *ArticleRequest) (*schema.Page, error) {
 	res, err := c.get(ctx, fmt.Sprintf("/pages/meta/%s/%s", req.Project, req.Name), nil)
+
 	if err != nil {
 		return nil, err
 	}
@@ -88,45 +89,19 @@ func (c *Client) Article(ctx context.Context, req *ArticleRequest) (*schema.Page
 	defer res.Body.Close()
 	art := new(schema.Page)
 
-	if err := json.NewDecoder(res.Body).Decode(art); err != nil {
-		return nil, err
-	}
-
-	return art, nil
+	return art, json.NewDecoder(res.Body).Decode(art)
 }
 
 // Projects triggers /projects endpoint and returns list of available projects.
 func (c *Client) Projects(ctx context.Context) ([]*schema.Project, error) {
 	res, err := c.get(ctx, "/projects", nil)
+
 	if err != nil {
 		return nil, err
 	}
 
 	defer res.Body.Close()
-	var projects []*schema.Project
+	prs := []*schema.Project{}
 
-	dec := json.NewDecoder(res.Body)
-
-	// read open bracket
-	if _, err = dec.Token(); err != nil {
-		return nil, err
-	}
-
-	// while the array contains project objects
-	for dec.More() {
-		project := new(schema.Project)
-
-		if err := dec.Decode(project); err != nil {
-			return nil, err
-		}
-
-		projects = append(projects, project)
-	}
-
-	// read closing bracket
-	if _, err = dec.Token(); err != nil {
-		return nil, err
-	}
-
-	return projects, nil
+	return prs, json.NewDecoder(res.Body).Decode(&prs)
 }
