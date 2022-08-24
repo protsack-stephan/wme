@@ -18,6 +18,6 @@ type Version struct {
 	Scores              *Scores  `json:"scores,omitempty"`
 	Editor              *Editor  `json:"editor,omitempty"`
 	NumberOfCharacters  int      `json:"number_of_characters,omitempty"`
-	Size                *Size    `json:"size,omitempty"` // note that there's intentional `sizes` instead of `size` because size is ksqldb keyword
+	Size                *Size    `json:"size,omitempty"`
 	Event               *Event   `json:"event,omitempty"`
 }

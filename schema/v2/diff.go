@@ -8,5 +8,5 @@ type Diff struct {
 	NonSafeWords                *Delta `json:"non_safe_words,omitempty"`
 	InformalWords               *Delta `json:"informal_words,omitempty"`
 	UppercaseLetters            *Delta `json:"uppercase_letters,omitempty"`
-	Size                        *Size  `json:"size,omitempty"` // note that there's intentional `sizes` instead of `size` because size is ksqldb keyword
+	Size                        *Size  `json:"size,omitempty"`
 }
