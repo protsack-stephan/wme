@@ -9,7 +9,6 @@ type PreviousVersion struct {
 // Version representation for the article.
 // Mainly modeled after https://schema.org/Thing.
 type Version struct {
-	TableName           struct{} `json:"-"`
 	Identifier          int      `json:"identifier,omitempty"`
 	Comment             string   `json:"comment,omitempty"`
 	Tags                []string `json:"tags,omitempty"`

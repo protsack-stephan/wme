@@ -7,7 +7,6 @@ import (
 // Article schema for wikipedia article.
 // Tries to compliant with https://schema.org/Article.
 type Article struct {
-	TableName              struct{}         `json:"-"`
 	Name                   string           `json:"name,omitempty"`
 	Identifier             int              `json:"identifier,omitempty"`
 	DateCreated            *time.Time       `json:"date_created,omitempty"`
