@@ -13,6 +13,8 @@ Note that all of the code inside this repository is not production ready. Althou
 
 1. Using [on-demand APIs](example/ondemand/) (article and projects look up)
 
+1. Connecting [Realtime V2 Beta](example/realtime/).
+
 
 ### SDK(s)
 
@@ -21,3 +23,5 @@ Note that all of the code inside this repository is not production ready. Althou
 1. [Authentication client.](pkg/auth/)
 
 1. [On-Demand client.](pkg/ondemand/)
+
+1. [Realtime V2 beta.](pkg/realtime/)
