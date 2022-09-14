@@ -1,3 +1,4 @@
+// Package realtime is a SDK for working with realtime API v2 BETA.
 package realtime
 
 import (
