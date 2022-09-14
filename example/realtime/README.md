@@ -1,4 +1,4 @@
-# Wikimedia Enterprise Firehose API example
+# Wikimedia Enterprise Realtime API example
 
 Showcase of connection to single real time event stream. 
 
@@ -19,5 +19,5 @@ Showcase of connection to single real time event stream.
 
 1. Note that if you are running this from the root use this command:
     ```bash
-    go run example/firehose/main.go
+    go run example/realtime/main.go
     ```

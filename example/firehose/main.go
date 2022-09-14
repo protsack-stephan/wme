@@ -26,9 +26,15 @@ func main() {
 		log.Panic(err)
 	}
 
-	defer ath.RevokeToken(ctx, &auth.RevokeTokenRequest{
-		RefreshToken: lgn.RefreshToken,
-	})
+	defer func() {
+		err := ath.RevokeToken(ctx, &auth.RevokeTokenRequest{
+			RefreshToken: lgn.RefreshToken,
+		})
+
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	fhs := firehose.NewClient()
 	fhs.SetAccessToken(lgn.AccessToken)
