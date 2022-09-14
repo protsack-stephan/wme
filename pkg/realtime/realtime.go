@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -100,7 +100,7 @@ func (c *Client) subscribe(ctx context.Context, url string, body interface{}, cb
 	defer res.Body.Close()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode > http.StatusIMUsed {
-		data, err := ioutil.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 
 		if err != nil {
 			return err

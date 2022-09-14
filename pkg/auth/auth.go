@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -76,7 +76,7 @@ func (c *Client) post(ctx context.Context, url string, v interface{}) (*http.Res
 	}
 
 	if res.StatusCode < http.StatusOK || res.StatusCode > http.StatusIMUsed {
-		data, err := ioutil.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 
 		if err != nil {
 			return nil, err
