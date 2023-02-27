@@ -14,17 +14,11 @@ import (
 	"github.com/protsack-stephan/wme/schema/v2"
 )
 
-// Filter payload for filters in realtime API.
-type Filter struct {
-	Field string      `json:"field"`
-	Value interface{} `json:"value"`
-}
-
 // ArticlesRequest request for filtering and fields in realtime API.
 type ArticlesRequest struct {
-	Since   time.Time `json:"since,omitempty"`
-	Fields  []string  `json:"fields,omitempty"`
-	Filters []Filter  `json:"filters,omitempty"`
+	Since   time.Time       `json:"since,omitempty"`
+	Fields  []string        `json:"fields,omitempty"`
+	Filters []schema.Filter `json:"filters,omitempty"`
 }
 
 // NewClient create new realtime client.

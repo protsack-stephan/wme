@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"time"
@@ -40,14 +41,15 @@ func main() {
 	rlt.SetAccessToken(lgn.AccessToken)
 
 	hdl := func(art *schema.Article) error {
-		log.Printf("'%s' with event '%s', in project '%s'", art.Name, art.Event.Type, art.IsPartOf.Identifier)
+		dta, _ := json.Marshal(art)
+		log.Println(string(dta))
 		return nil
 	}
 
 	arq := &realtime.ArticlesRequest{
 		Since:  time.Now().UTC().Add(-1 * time.Hour),
-		Fields: []string{"name", "event.*", "is_part_of.*"},
-		Filters: []realtime.Filter{
+		Fields: []string{"name", "abstract", "event.type"},
+		Filters: []schema.Filter{
 			{
 				Field: "is_part_of.identifier",
 				Value: "enwiki",
@@ -55,6 +57,10 @@ func main() {
 			{
 				Field: "event.type",
 				Value: "update",
+			},
+			{
+				Field: "namespace.identifier",
+				Value: 0,
 			},
 		},
 	}

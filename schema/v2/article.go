@@ -8,6 +8,7 @@ import (
 // Tries to compliant with https://schema.org/Article.
 type Article struct {
 	Name                   string           `json:"name,omitempty"`
+	Abstract               string           `json:"abstract,omitempty"`
 	Identifier             int              `json:"identifier,omitempty"`
 	DateCreated            *time.Time       `json:"date_created,omitempty"`
 	DateModified           *time.Time       `json:"date_modified,omitempty"`

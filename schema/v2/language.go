@@ -6,5 +6,4 @@ type Language struct {
 	Name          string `json:"name,omitempty"`
 	AlternateName string `json:"alternate_name,omitempty"`
 	Direction     string `json:"direction,omitempty"`
-	Event         *Event `json:"event,omitempty"`
 }
