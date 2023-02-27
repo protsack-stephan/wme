@@ -212,21 +212,8 @@ func (c *Client) getEntity(ctx context.Context, req *Request, pth string, val in
 	return json.NewDecoder(res.Body).Decode(val)
 }
 
-func (c *Client) readEntity(ctx context.Context, pth string, cbk ReadCallback) error {
-	hrq, err := c.newRequest(ctx, http.MethodGet, pth, nil)
-
-	if err != nil {
-		return err
-	}
-
-	res, err := c.do(hrq)
-
-	if err != nil {
-		return err
-	}
-
-	defer res.Body.Close()
-	gzr, err := pgzip.NewReader(res.Body)
+func (c *Client) readAll(ctx context.Context, rdr io.Reader, cbk ReadCallback) error {
+	gzr, err := pgzip.NewReader(rdr)
 
 	if err != nil {
 		return err
@@ -262,6 +249,23 @@ func (c *Client) readEntity(ctx context.Context, pth string, cbk ReadCallback) e
 	}
 
 	return nil
+}
+
+func (c *Client) readEntity(ctx context.Context, pth string, cbk ReadCallback) error {
+	hrq, err := c.newRequest(ctx, http.MethodGet, pth, nil)
+
+	if err != nil {
+		return err
+	}
+
+	res, err := c.do(hrq)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+	return c.readAll(ctx, res.Body, cbk)
 }
 
 func (c *Client) headEntity(ctx context.Context, pth string) (*schema.Headers, error) {
