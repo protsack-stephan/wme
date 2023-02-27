@@ -1,6 +1,8 @@
 package api
 
 import (
+	"archive/tar"
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -13,10 +15,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/klauspost/pgzip"
 	"github.com/protsack-stephan/wme/schema/v2"
 )
 
 const dateFormat = "2006-01-02"
+
+type ReadCallback func(art *schema.Article) error
 
 type Request struct {
 	Fields  []string         `json:"fields,omitempty"`
@@ -68,17 +73,29 @@ type BatchHeader interface {
 	HeadBatch(ctx context.Context, dte *time.Time, idr string) (*schema.Headers, error)
 }
 
+type BatchReader interface {
+	ReadBatch(ctx context.Context, dte *time.Time, idr string, cbk ReadCallback) error
+}
+
 type BatchDownloader interface{}
 
-type SnapshotsGetter interface{}
+type SnapshotsGetter interface {
+	GetSnapshots(ctx context.Context, req *Request) ([]*schema.Snapshot, error)
+}
 
-type SnapshotGetter interface{}
+type SnapshotGetter interface {
+	GetSnapshot(ctx context.Context, idr string, req *Request) (*schema.Snapshot, error)
+}
 
-type SnapshotHeader interface{}
+type SnapshotHeader interface {
+	HeadSnapshot(ctx context.Context, idr string) (*schema.Headers, error)
+}
 
 type SnapshotDownloader interface{}
 
-type ArticlesGetter interface{}
+type SnapshotReader interface {
+	ReadSnapshot(ctx context.Context, idr string, cbk ReadCallback) error
+}
 
 type AccessTokenSetter interface {
 	SetAccessToken(tkn string)
@@ -96,12 +113,13 @@ type API interface {
 	BatchesGetter
 	BatchGetter
 	BatchHeader
+	BatchReader
 	BatchDownloader
 	SnapshotsGetter
 	SnapshotGetter
 	SnapshotHeader
 	SnapshotDownloader
-	ArticlesGetter
+	SnapshotReader
 	AccessTokenSetter
 }
 
@@ -192,6 +210,58 @@ func (c *Client) getEntity(ctx context.Context, req *Request, pth string, val in
 
 	defer res.Body.Close()
 	return json.NewDecoder(res.Body).Decode(val)
+}
+
+func (c *Client) readEntity(ctx context.Context, pth string, cbk ReadCallback) error {
+	hrq, err := c.newRequest(ctx, http.MethodGet, pth, nil)
+
+	if err != nil {
+		return err
+	}
+
+	res, err := c.do(hrq)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+	gzr, err := pgzip.NewReader(res.Body)
+
+	if err != nil {
+		return err
+	}
+
+	trr := tar.NewReader(gzr)
+
+	for {
+		_, err := trr.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		scn := bufio.NewScanner(trr)
+		scn.Buffer([]byte{}, 20971520)
+
+		for scn.Scan() {
+			art := new(schema.Article)
+
+			if err := json.Unmarshal(scn.Bytes(), art); err != nil {
+				return err
+			}
+
+			if err := cbk(art); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (c *Client) headEntity(ctx context.Context, pth string) (*schema.Headers, error) {
@@ -296,6 +366,24 @@ func (c *Client) HeadBatch(ctx context.Context, dte *time.Time, idr string) (*sc
 	return c.headEntity(ctx, fmt.Sprintf("batches/%s/%s/download", dte.Format(dateFormat), idr))
 }
 
-func (c *Client) DownloadBatch(ctx context.Context, dte *time.Time, idr string) (io.ReadCloser, error) {
-	return nil, nil
+func (c *Client) ReadBatch(ctx context.Context, dte *time.Time, idr string, cbk ReadCallback) error {
+	return c.readEntity(ctx, fmt.Sprintf("batches/%s/%s/download", dte.Format(dateFormat), idr), cbk)
+}
+
+func (c *Client) GetSnapshots(ctx context.Context, req *Request) ([]*schema.Snapshot, error) {
+	sps := []*schema.Snapshot{}
+	return sps, c.getEntity(ctx, req, "snapshots", &sps)
+}
+
+func (c *Client) GetSnapshot(ctx context.Context, idr string, req *Request) (*schema.Snapshot, error) {
+	snp := new(schema.Snapshot)
+	return snp, c.getEntity(ctx, req, fmt.Sprintf("snapshots/%s", idr), snp)
+}
+
+func (c *Client) HeadSnapshot(ctx context.Context, idr string) (*schema.Headers, error) {
+	return c.headEntity(ctx, fmt.Sprintf("snapshots/%s/download", idr))
+}
+
+func (c *Client) ReadSnapshot(ctx context.Context, idr string, cbk ReadCallback) error {
+	return c.readEntity(ctx, fmt.Sprintf("snapshots/%s/download", idr), cbk)
 }
