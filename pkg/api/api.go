@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -78,7 +77,7 @@ type BatchReader interface {
 }
 
 type BatchDownloader interface {
-	DownloadBatch(ctx context.Context, dte *time.Time, idr string, wrr io.Writer, cnc int) error
+	DownloadBatch(ctx context.Context, dte *time.Time, idr string, wsk io.WriteSeeker) error
 }
 
 type SnapshotsGetter interface {
@@ -94,7 +93,7 @@ type SnapshotHeader interface {
 }
 
 type SnapshotDownloader interface {
-	DownloadSnapshot(ctx context.Context, idr string, wrr io.Writer, cnc int) error
+	DownloadSnapshot(ctx context.Context, idr string, wsk io.WriteSeeker) error
 }
 
 type SnapshotReader interface {
@@ -134,10 +133,12 @@ type API interface {
 
 func NewClient(ops ...func(clt *Client)) API {
 	clt := &Client{
-		HTTPClient:   &http.Client{},
-		MinChunkSize: 5242880,
-		UserAgent:    "",
-		BaseUrl:      "https://api-beta.enterprise.wikimedia.com/",
+		HTTPClient:           &http.Client{},
+		DownloadMinChunkSize: 5242880,
+		DownloadChunkSize:    5242880 * 5,
+		DownloadConcurrency:  10,
+		UserAgent:            "",
+		BaseUrl:              "https://api-beta.enterprise.wikimedia.com/",
 	}
 
 	for _, opt := range ops {
@@ -148,11 +149,13 @@ func NewClient(ops ...func(clt *Client)) API {
 }
 
 type Client struct {
-	HTTPClient   *http.Client
-	UserAgent    string
-	BaseUrl      string
-	AccessToken  string
-	MinChunkSize int
+	HTTPClient           *http.Client
+	UserAgent            string
+	BaseUrl              string
+	AccessToken          string
+	DownloadMinChunkSize int
+	DownloadChunkSize    int
+	DownloadConcurrency  int
 }
 
 func (c *Client) newRequest(ctx context.Context, mtd string, pth string, req *Request) (*http.Request, error) {
@@ -188,7 +191,7 @@ func (c *Client) do(hrq *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode < http.StatusOK || res.StatusCode > http.StatusIMUsed {
 		dta, err := io.ReadAll(res.Body)
 		defer res.Body.Close()
 
@@ -298,8 +301,6 @@ func (c *Client) headEntity(ctx context.Context, pth string) (*schema.Headers, e
 		AcceptRanges: res.Header.Get("Accept-Ranges"),
 	}
 
-	log.Println(res.Header)
-
 	if lmf := res.Header.Get("Last-Modified"); len(lmf) > 0 {
 		lmd, err := time.Parse(time.RFC1123, lmf)
 
@@ -323,16 +324,108 @@ func (c *Client) headEntity(ctx context.Context, pth string) (*schema.Headers, e
 	return hdr, nil
 }
 
-func (c *Client) downloadEntity(ctx context.Context, pth string, wrr io.Writer, cnc int) error {
+type chunk struct {
+	start int
+	end   int
+	data  []byte
+}
+
+func (c *Client) downloadEntity(ctx context.Context, pth string, wrr io.WriteSeeker) error {
 	hds, err := c.headEntity(ctx, pth)
 
 	if err != nil {
 		return err
 	}
 
-	log.Println(hds.ContentLength / cnc)
-	cks := hds.ContentLength / cnc
-	ckl := cnc
+	csz := c.DownloadChunkSize
+
+	if hds.ContentLength < c.DownloadMinChunkSize {
+		csz = c.DownloadMinChunkSize
+	}
+
+	cks := []*chunk{}
+
+	for i := 0; true; i++ {
+		cnk := &chunk{
+			start: i * csz,
+			end:   (i * csz) + csz,
+		}
+
+		if cnk.end > hds.ContentLength {
+			cnk.end = hds.ContentLength
+		}
+
+		cks = append(cks, cnk)
+
+		if cnk.end == hds.ContentLength {
+			break
+		}
+	}
+
+	ers := make(chan error, len(cks)*2)
+	cds := make(chan *chunk, len(cks))
+
+	go func() {
+		for cnk := range cds {
+			if _, err := wrr.Seek(int64(cnk.start), 0); err != nil {
+				ers <- err
+				return
+			}
+
+			if _, err := io.CopyN(wrr, bytes.NewReader(cnk.data), int64(cnk.end-cnk.start)); err != nil {
+				ers <- err
+				return
+			}
+
+			ers <- nil
+		}
+	}()
+
+	dcs := c.DownloadConcurrency
+	smr := make(chan struct{}, dcs)
+
+	for _, cnk := range cks {
+		go func(cnk *chunk) {
+			smr <- struct{}{}
+			defer func() {
+				ers <- nil
+				<-smr
+			}()
+
+			hrq, err := c.newRequest(ctx, http.MethodGet, pth, nil)
+			hrq.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", cnk.start, cnk.end))
+
+			if err != nil {
+				ers <- err
+				return
+			}
+
+			res, err := c.do(hrq)
+
+			if err != nil {
+				ers <- err
+				return
+			}
+
+			defer res.Body.Close()
+			cnk.data, err = io.ReadAll(res.Body)
+
+			if err != nil {
+				ers <- err
+				return
+			}
+
+			cds <- cnk
+		}(cnk)
+	}
+
+	for i := 0; i < cap(ers); i++ {
+		if err := <-ers; err != nil {
+			return err
+		}
+	}
+
+	close(cds)
 
 	return nil
 }
@@ -399,8 +492,8 @@ func (c *Client) ReadBatch(ctx context.Context, dte *time.Time, idr string, cbk 
 	return c.readEntity(ctx, fmt.Sprintf("batches/%s/%s/download", dte.Format(dateFormat), idr), cbk)
 }
 
-func (c *Client) DownloadBatch(ctx context.Context, dte *time.Time, idr string, wrr io.Writer, cnc int) error {
-	return c.downloadEntity(ctx, fmt.Sprintf("batches/%s/%s/download", dte.Format(dateFormat), idr), wrr, cnc)
+func (c *Client) DownloadBatch(ctx context.Context, dte *time.Time, idr string, wsk io.WriteSeeker) error {
+	return c.downloadEntity(ctx, fmt.Sprintf("batches/%s/%s/download", dte.Format(dateFormat), idr), wsk)
 }
 
 func (c *Client) GetSnapshots(ctx context.Context, req *Request) ([]*schema.Snapshot, error) {
@@ -421,8 +514,8 @@ func (c *Client) ReadSnapshot(ctx context.Context, idr string, cbk ReadCallback)
 	return c.readEntity(ctx, fmt.Sprintf("snapshots/%s/download", idr), cbk)
 }
 
-func (c *Client) DownloadSnapshot(ctx context.Context, idr string, wrr io.Writer, cnc int) error {
-	return c.downloadEntity(ctx, fmt.Sprintf("snapshots/%s/download", idr), wrr, cnc)
+func (c *Client) DownloadSnapshot(ctx context.Context, idr string, wsk io.WriteSeeker) error {
+	return c.downloadEntity(ctx, fmt.Sprintf("snapshots/%s/download", idr), wsk)
 }
 
 func (c *Client) ReadAll(ctx context.Context, rdr io.Reader, cbk ReadCallback) error {

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 
 	"github.com/protsack-stephan/wme/pkg/api"
 	"github.com/protsack-stephan/wme/pkg/auth"
@@ -113,7 +114,7 @@ func main() {
 	// 	},
 	// }
 
-	// dte := time.Now().UTC()
+	dte := time.Now().UTC()
 	// printrs(clt.GetBatches(ctx, &dte, brq))
 	// printrs(clt.GetBatch(ctx, &dte, "enwiki_namespace_0", brq))
 	// printrs(clt.HeadBatch(ctx, &dte, "enwiki_namespace_0"))
@@ -155,11 +156,17 @@ func main() {
 		log.Panic(err)
 	}
 
-	if err := clt.DownloadSnapshot(ctx, "afwikibooks_namespace_0", tmf, 10); err != nil {
+	defer tmf.Close()
+
+	if err := clt.DownloadBatch(ctx, &dte, "ukwiki_namespace_0", tmf); err != nil {
 		log.Panic(err)
 	}
 
-	defer tmf.Close()
+	tmf.Seek(0, 0)
+
+	inf, _ := tmf.Stat()
+
+	log.Println(inf.Size(), "here")
 
 	if err := clt.ReadAll(ctx, tmf, cbk); err != nil {
 		log.Panic(err)
