@@ -31,7 +31,7 @@ type ReadCallback func(art *schema.Article) error
 type Request struct {
 	// Since is a parameter used only for streaming endpoints.
 	// Will pick up the reading of stream from this timestamp.
-	// Fo the articles endpoint it will be restricted to 24h.
+	// For the articles endpoint it will be restricted to 48h.
 	Since *time.Time `json:"since,omitempty"`
 
 	// Fields represents a list of fields to retrieve from the API.
