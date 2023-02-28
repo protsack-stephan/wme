@@ -161,11 +161,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	tmf.Seek(0, 0)
-
-	inf, _ := tmf.Stat()
-
-	log.Println(inf.Size(), "here")
+	_, _ = tmf.Seek(0, 0)
 
 	if err := clt.ReadAll(ctx, tmf, cbk); err != nil {
 		log.Panic(err)
