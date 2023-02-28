@@ -49,7 +49,7 @@ func main() {
 	arq := &realtime.ArticlesRequest{
 		Since:  time.Now().UTC().Add(-1 * time.Hour),
 		Fields: []string{"name", "abstract", "event.type"},
-		Filters: []schema.Filter{
+		Filters: []realtime.Filter{
 			{
 				Field: "is_part_of.identifier",
 				Value: "enwiki",

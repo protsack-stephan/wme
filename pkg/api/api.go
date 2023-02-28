@@ -29,6 +29,11 @@ type ReadCallback func(art *schema.Article) error
 
 // Request contains properties that are used to apply filters to the API.
 type Request struct {
+	// Since is a parameter used only for streaming endpoints.
+	// Will pick up the reading of stream from this timestamp.
+	// Fo the articles endpoint it will be restricted to 24h.
+	Since *time.Time `json:"since,omitempty"`
+
 	// Fields represents a list of fields to retrieve from the API.
 	// This is an optional argument.
 	Fields []string `json:"fields,omitempty"`
@@ -137,6 +142,11 @@ type ArticlesGetter interface {
 	GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error)
 }
 
+// ArticlesStreamer is an interface for getting all the article changes in realtime.
+type ArticlesStreamer interface {
+	StreamArticles(ctx context.Context, req *Request, cbk ReadCallback) error
+}
+
 // AllReader is an interface for reading all the contents of a reader with a callback function.
 type AllReader interface {
 	ReadAll(ctx context.Context, rdr io.Reader, cbk ReadCallback) error
@@ -171,6 +181,7 @@ type API interface {
 	AllReader
 	AccessTokenSetter
 	ArticlesGetter
+	ArticlesStreamer
 }
 
 // NewClient returns a new instance of the Client that implements the API interface.
@@ -184,6 +195,7 @@ func NewClient(ops ...func(clt *Client)) API {
 		DownloadConcurrency:  10,
 		UserAgent:            "",
 		BaseUrl:              "https://api-beta.enterprise.wikimedia.com/",
+		RealtimeURL:          "https://realtime-beta.enterprise.wikimedia.com/",
 	}
 
 	for _, opt := range ops {
@@ -198,13 +210,14 @@ type Client struct {
 	HTTPClient           *http.Client // HTTP client used to send requests.
 	UserAgent            string       // User-agent header value sent with each request.
 	BaseUrl              string       // Base URL for all API requests.
+	RealtimeURL          string       // Streaming URL endpoint for streaming.
 	AccessToken          string       // Access token used to authenticate requests.
 	DownloadMinChunkSize int          // Minimum chunk size used for downloading resources.
 	DownloadChunkSize    int          // Chunk size used for downloading resources.
 	DownloadConcurrency  int          // Number of simultaneous downloads allowed.
 }
 
-func (c *Client) newRequest(ctx context.Context, mtd string, pth string, req *Request) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, url string, mtd string, pth string, req *Request) (*http.Request, error) {
 	dta := []byte{}
 
 	if req != nil {
@@ -217,7 +230,7 @@ func (c *Client) newRequest(ctx context.Context, mtd string, pth string, req *Re
 		dta = bdy
 	}
 
-	hrq, err := http.NewRequestWithContext(ctx, mtd, fmt.Sprintf("%sv2/%s", c.BaseUrl, pth), bytes.NewReader(dta))
+	hrq, err := http.NewRequestWithContext(ctx, mtd, fmt.Sprintf("%sv2/%s", url, pth), bytes.NewReader(dta))
 
 	if err != nil {
 		return nil, err
@@ -256,7 +269,7 @@ func (c *Client) do(hrq *http.Request) (*http.Response, error) {
 }
 
 func (c *Client) getEntity(ctx context.Context, req *Request, pth string, val interface{}) error {
-	hrq, err := c.newRequest(ctx, http.MethodPost, pth, req)
+	hrq, err := c.newRequest(ctx, c.BaseUrl, http.MethodPost, pth, req)
 
 	if err != nil {
 		return err
@@ -292,19 +305,27 @@ func (c *Client) readAll(ctx context.Context, rdr io.Reader, cbk ReadCallback) e
 			return err
 		}
 
-		scn := bufio.NewScanner(trr)
-		scn.Buffer([]byte{}, 20971520)
+		if err := c.readLoop(ctx, trr, cbk); err != nil {
+			return err
+		}
+	}
 
-		for scn.Scan() {
-			art := new(schema.Article)
+	return nil
+}
 
-			if err := json.Unmarshal(scn.Bytes(), art); err != nil {
-				return err
-			}
+func (c *Client) readLoop(ctx context.Context, rdr io.Reader, cbk ReadCallback) error {
+	scn := bufio.NewScanner(rdr)
+	scn.Buffer([]byte{}, 20971520)
 
-			if err := cbk(art); err != nil {
-				return err
-			}
+	for scn.Scan() {
+		art := new(schema.Article)
+
+		if err := json.Unmarshal(scn.Bytes(), art); err != nil {
+			return err
+		}
+
+		if err := cbk(art); err != nil {
+			return err
 		}
 	}
 
@@ -312,7 +333,7 @@ func (c *Client) readAll(ctx context.Context, rdr io.Reader, cbk ReadCallback) e
 }
 
 func (c *Client) readEntity(ctx context.Context, pth string, cbk ReadCallback) error {
-	hrq, err := c.newRequest(ctx, http.MethodGet, pth, nil)
+	hrq, err := c.newRequest(ctx, c.BaseUrl, http.MethodGet, pth, nil)
 
 	if err != nil {
 		return err
@@ -329,7 +350,7 @@ func (c *Client) readEntity(ctx context.Context, pth string, cbk ReadCallback) e
 }
 
 func (c *Client) headEntity(ctx context.Context, pth string) (*schema.Headers, error) {
-	hrq, err := c.newRequest(ctx, http.MethodHead, pth, nil)
+	hrq, err := c.newRequest(ctx, c.BaseUrl, http.MethodHead, pth, nil)
 
 	if err != nil {
 		return nil, err
@@ -438,7 +459,7 @@ func (c *Client) downloadEntity(ctx context.Context, pth string, wrr io.WriteSee
 				<-smr
 			}()
 
-			hrq, err := c.newRequest(ctx, http.MethodGet, pth, nil)
+			hrq, err := c.newRequest(ctx, c.BaseUrl, http.MethodGet, pth, nil)
 			hrq.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", cnk.start, cnk.end))
 
 			if err != nil {
@@ -474,6 +495,26 @@ func (c *Client) downloadEntity(ctx context.Context, pth string, wrr io.WriteSee
 	close(cds)
 
 	return nil
+}
+
+func (c *Client) subscribeToEntity(ctx context.Context, pth string, cbk ReadCallback) error {
+	hrq, err := c.newRequest(ctx, c.RealtimeURL, http.MethodGet, pth, nil)
+
+	if err != nil {
+		return err
+	}
+
+	hrq.Header.Set("Cache-Control", "no-cache")
+	hrq.Header.Set("Accept", "application/x-ndjson")
+	hrq.Header.Set("Connection", "keep-alive")
+	res, err := c.do(hrq)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+	return c.readLoop(ctx, res.Body, cbk)
 }
 
 // SetAccessToken sets the access token for the client.
@@ -587,6 +628,12 @@ func (c *Client) DownloadSnapshot(ctx context.Context, idr string, wsk io.WriteS
 func (c *Client) GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error) {
 	ats := []*schema.Article{}
 	return ats, c.getEntity(ctx, req, fmt.Sprintf("articles/%s", nme), &ats)
+}
+
+// StreamArticles streams all available articles from the server and applies a callback function to each article
+// as they arrive. The callback function must implement the ReadCallback interface.
+func (c *Client) StreamArticles(ctx context.Context, req *Request, cbk ReadCallback) error {
+	return c.subscribeToEntity(ctx, "articles", cbk)
 }
 
 // ReadAll reads the contents of the given io.Reader and calls the given ReadCallback function

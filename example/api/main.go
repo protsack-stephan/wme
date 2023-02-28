@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -150,7 +149,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	tmf, err := ioutil.TempFile("", "test.tar.gz")
+	tmf, err := os.CreateTemp("", "test.tar.gz")
 
 	if err != nil {
 		log.Panic(err)
@@ -176,4 +175,11 @@ func main() {
 	arq.Fields = []string{"name", "is_part_of.*"}
 	arq.Limit = 5
 	printrs(clt.GetArticles(ctx, "Earth", arq))
+
+	cdl, cnc := context.WithTimeout(ctx, time.Second*10)
+	defer cnc()
+
+	if err := clt.StreamArticles(cdl, arq, cbk); err != nil {
+		log.Panic(err)
+	}
 }
