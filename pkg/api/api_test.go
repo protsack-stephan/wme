@@ -47,6 +47,8 @@ type apiTestSuite struct {
 	sid string
 	sps string
 	spt string
+	anm string
+	ats string
 	sts int
 	act string
 	err error
@@ -72,6 +74,8 @@ func (s *apiTestSuite) createAPIServer() http.Handler {
 
 	rtr.HandleFunc("/v2/snapshots", createHandler(s.sts, s.sps))
 	rtr.HandleFunc(fmt.Sprintf("/v2/snapshots/%s", s.sid), createHandler(s.sts, s.spt))
+
+	rtr.HandleFunc(fmt.Sprintf("/v2/articles/%s", s.anm), createHandler(s.sts, s.ats))
 
 	return rtr
 }
@@ -261,7 +265,17 @@ func (s *apiTestSuite) TestReadSnapshot() {}
 
 func (s *apiTestSuite) TestDownloadSnapshot() {}
 
-func (s *apiTestSuite) TestGetArticles() {}
+func (s *apiTestSuite) TestGetArticles() {
+	ats, err := s.clt.GetArticles(s.ctx, s.anm, s.req)
+
+	if s.err != nil {
+		s.Assert().Error(err)
+		s.Assert().Empty(ats)
+	} else {
+		s.Assert().NoError(err)
+		s.Assert().NotEmpty(ats)
+	}
+}
 
 func (s *apiTestSuite) TestStreamArticles() {}
 
@@ -473,6 +487,21 @@ func TestAPI(t *testing.T) {
 					"unit_text": "MB"
 				}
 			}`,
+			anm: "Earth",
+			ats: `[
+				{
+					"name": "Earth",
+					"is_part_of": {
+						"identifier": "enwiki"
+					}
+				},
+				{
+					"name": "Earth",
+					"is_part_of": {
+						"identifier": "enwikinews"
+					}
+				}
+			]`,
 			sts: http.StatusOK,
 		},
 	} {
