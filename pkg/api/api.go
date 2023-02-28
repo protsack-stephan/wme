@@ -132,6 +132,11 @@ type SnapshotReader interface {
 	ReadSnapshot(ctx context.Context, idr string, cbk ReadCallback) error
 }
 
+// ArticlesGetter is an interface for getting a lits of articles by name.
+type ArticlesGetter interface {
+	GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error)
+}
+
 // AllReader is an interface for reading all the contents of a reader with a callback function.
 type AllReader interface {
 	ReadAll(ctx context.Context, rdr io.Reader, cbk ReadCallback) error
@@ -165,6 +170,7 @@ type API interface {
 	SnapshotReader
 	AllReader
 	AccessTokenSetter
+	ArticlesGetter
 }
 
 // NewClient returns a new instance of the Client that implements the API interface.
@@ -575,6 +581,12 @@ func (c *Client) ReadSnapshot(ctx context.Context, idr string, cbk ReadCallback)
 // DownloadSnapshot downloads the contents of a single snapshot for a specific ID, and writes the data to the specified WriteSeeker.
 func (c *Client) DownloadSnapshot(ctx context.Context, idr string, wsk io.WriteSeeker) error {
 	return c.downloadEntity(ctx, fmt.Sprintf("snapshots/%s/download", idr), wsk)
+}
+
+// GetArticles retrieves articles from the API based on the given name and request parameters.
+func (c *Client) GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error) {
+	ats := []*schema.Article{}
+	return ats, c.getEntity(ctx, req, fmt.Sprintf("articles/%s", nme), &ats)
 }
 
 // ReadAll reads the contents of the given io.Reader and calls the given ReadCallback function

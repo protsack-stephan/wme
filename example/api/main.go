@@ -171,4 +171,9 @@ func main() {
 	if err := clt.ReadAll(ctx, tmf, cbk); err != nil {
 		log.Panic(err)
 	}
+
+	arq := new(api.Request)
+	arq.Fields = []string{"name", "is_part_of.*"}
+	arq.Limit = 5
+	printrs(clt.GetArticles(ctx, "Earth", arq))
 }
