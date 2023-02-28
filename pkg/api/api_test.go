@@ -6,10 +6,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/protsack-stephan/wme/pkg/api"
 	"github.com/stretchr/testify/suite"
 )
+
+const dateFormat = "2006-01-02"
 
 func createHandler(sts int, dta string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +40,13 @@ type apiTestSuite struct {
 	nid int
 	nss string
 	nsp string
+	bdt string
+	bid string
+	bts string
+	bth string
+	sid string
+	sps string
+	spt string
 	sts int
 	act string
 	err error
@@ -56,6 +66,12 @@ func (s *apiTestSuite) createAPIServer() http.Handler {
 
 	rtr.HandleFunc("/v2/namespaces", createHandler(s.sts, s.nss))
 	rtr.HandleFunc(fmt.Sprintf("/v2/namespaces/%d", s.nid), createHandler(s.sts, s.nsp))
+
+	rtr.HandleFunc(fmt.Sprintf("/v2/batches/%s", s.bdt), createHandler(s.sts, s.bts))
+	rtr.HandleFunc(fmt.Sprintf("/v2/batches/%s/%s", s.bdt, s.bid), createHandler(s.sts, s.bth))
+
+	rtr.HandleFunc("/v2/snapshots", createHandler(s.sts, s.sps))
+	rtr.HandleFunc(fmt.Sprintf("/v2/snapshots/%s", s.sid), createHandler(s.sts, s.spt))
 
 	return rtr
 }
@@ -183,9 +199,31 @@ func (s *apiTestSuite) TestGetNamespace() {
 	}
 }
 
-func (s *apiTestSuite) TestGetBatches() {}
+func (s *apiTestSuite) TestGetBatches() {
+	dte, _ := time.Parse(dateFormat, s.bdt)
+	bts, err := s.clt.GetBatches(s.ctx, &dte, s.req)
 
-func (s *apiTestSuite) TestGetBatch() {}
+	if s.err != nil {
+		s.Assert().Error(err)
+		s.Assert().Empty(bts)
+	} else {
+		s.Assert().NoError(err)
+		s.Assert().NotEmpty(bts)
+	}
+}
+
+func (s *apiTestSuite) TestGetBatch() {
+	dte, _ := time.Parse(dateFormat, s.bdt)
+	bth, err := s.clt.GetBatch(s.ctx, &dte, s.bid, s.req)
+
+	if s.err != nil {
+		s.Assert().Error(err)
+		s.Assert().Empty(bth)
+	} else {
+		s.Assert().NoError(err)
+		s.Assert().NotEmpty(bth)
+	}
+}
 
 func (s *apiTestSuite) TestHeadBatch() {}
 
@@ -193,9 +231,29 @@ func (s *apiTestSuite) TestReadBatch() {}
 
 func (s *apiTestSuite) TestDownloadBatch() {}
 
-func (s *apiTestSuite) TestGetSnapshots() {}
+func (s *apiTestSuite) TestGetSnapshots() {
+	sps, err := s.clt.GetSnapshots(s.ctx, s.req)
 
-func (s *apiTestSuite) TestGetSnapshot() {}
+	if s.err != nil {
+		s.Assert().Error(err)
+		s.Assert().Empty(sps)
+	} else {
+		s.Assert().NoError(err)
+		s.Assert().NotEmpty(sps)
+	}
+}
+
+func (s *apiTestSuite) TestGetSnapshot() {
+	spt, err := s.clt.GetSnapshot(s.ctx, s.sid, s.req)
+
+	if s.err != nil {
+		s.Assert().Error(err)
+		s.Assert().Empty(spt)
+	} else {
+		s.Assert().NoError(err)
+		s.Assert().NotEmpty(spt)
+	}
+}
 
 func (s *apiTestSuite) TestHeadSnapshot() {}
 
@@ -299,6 +357,121 @@ func TestAPI(t *testing.T) {
 				"name": "...",
 				"identifier": 6,
 				"description": "..."
+			}`,
+			bdt: "2023-02-28",
+			bid: "enwiki_namespace_0",
+			bts: `[
+				{
+					"identifier": "enwiki_namespace_0",
+					"version": "f9bc4266b42ac15a3a7f881c6e38aed7",
+					"date_modified": "2023-02-28T19:15:24.182031535Z",
+					"is_part_of": {
+						"identifier": "abwiki"
+					},
+					"in_language": {
+						"identifier": "ab"
+					},
+					"namespace": {
+						"identifier": 0
+					},
+					"size": {
+						"value": 0.002,
+						"unit_text": "MB"
+					}
+				},
+				{
+					"identifier": "abwiki_namespace_10",
+					"version": "05f21bfaa910a50fad318a8fc2c0ccb5",
+					"date_modified": "2023-02-28T19:15:26.611157307Z",
+					"is_part_of": {
+						"identifier": "abwiki"
+					},
+					"in_language": {
+						"identifier": "ab"
+					},
+					"namespace": {
+						"identifier": 10
+					},
+					"size": {
+						"value": 0.005,
+						"unit_text": "MB"
+					}
+				}
+			]`,
+			bth: `{
+				"identifier": "enwiki_namespace_0",
+				"version": "f9bc4266b42ac15a3a7f881c6e38aed7",
+				"date_modified": "2023-02-28T19:15:24.182031535Z",
+				"is_part_of": {
+					"identifier": "abwiki"
+				},
+				"in_language": {
+					"identifier": "ab"
+				},
+				"namespace": {
+					"identifier": 0
+				},
+				"size": {
+					"value": 0.002,
+					"unit_text": "MB"
+				}
+			}`,
+			sid: "abwiki_namespace_10",
+			sps: `[
+				{
+					"identifier": "abwiki_namespace_0",
+					"version": "93ec1fbd34b79e7c0302d5f2691445ab",
+					"date_modified": "2023-02-28T02:24:03.458822229Z",
+					"is_part_of": {
+						"identifier": "abwiki"
+					},
+					"in_language": {
+						"identifier": "ab"
+					},
+					"namespace": {
+						"identifier": 0
+					},
+					"size": {
+						"value": 14.561,
+						"unit_text": "MB"
+					}
+				},
+				{
+					"identifier": "abwiki_namespace_10",
+					"version": "cae69fac8c2f3c980ce0fb3623191245",
+					"date_modified": "2023-02-28T02:24:08.184474026Z",
+					"is_part_of": {
+						"identifier": "abwiki"
+					},
+					"in_language": {
+						"identifier": "ab"
+					},
+					"namespace": {
+						"identifier": 10
+					},
+					"size": {
+						"value": 11.482,
+						"unit_text": "MB"
+					}
+				}
+			]`,
+			spt: `{
+				"identifier": "abwiki_namespace_10",
+				"version": "cae69fac8c2f3c980ce0fb3623191245",
+				"date_modified": "2023-02-28T02:24:08.184474026Z",
+				"is_part_of": {
+					"identifier": "abwiki"
+				},
+				"in_language": {
+					"identifier": "ab"
+				},
+				"namespace": {
+					"identifier": 10
+				},
+				"size": {
+					"value": 11.482,
+					"unit_text": "MB"
+				}
 			}`,
 			sts: http.StatusOK,
 		},
