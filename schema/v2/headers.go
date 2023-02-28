@@ -2,6 +2,7 @@ package schema
 
 import "time"
 
+// Headers is representation of headers is in the response of HEAD request.
 type Headers struct {
 	ContentLength int        `json:"content_length,omitempty"`
 	ETag          string     `json:"etag,omitempty"`
