@@ -76,6 +76,8 @@ func main() {
 
 	// Downloading the batch with the specified batch identifier to the temporary file.
 	// Same can be done for Snapshots using the DownloadSnapshot function.
+	// Also to directly read the Snapshot or a Batch ReadBatch or ReadSnapshot function can be used.
+	// PartSize and Concurrency configuration can be found inside the client settings.
 	if err := clt.DownloadBatch(ctx, &dte, bts[0].Identifier, tmf); err != nil {
 		log.Panic(err)
 	}
