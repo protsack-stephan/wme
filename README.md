@@ -1,6 +1,6 @@
 # Wikimedia Enterprise API examples
 
-This is a repository of SDKs for wikimedia enterprise APIs. At the moment, it includes SDKs for authentication, realtime and on-demand APIs. It also includes examples for working with these APIs. 
+This is a repository of SDKs for wikimedia enterprise APIs. At the moment, it includes SDKs for authentication, realtime and on-demand APIs. It also includes examples for working with these APIs.
 Note that all of the code inside this repository is not production ready. Although large parts of the code are covered with unit tests, this code was not tested in real world applications, so use it at your own risk.
 
 ### Code samples
@@ -15,6 +15,7 @@ Note that all of the code inside this repository is not production ready. Althou
 
 1. Connecting [Realtime V2 Beta](example/realtime/).
 
+1. New [SDK](example/api/)
 
 ### SDK(s)
 
@@ -25,3 +26,5 @@ Note that all of the code inside this repository is not production ready. Althou
 1. [On-Demand client.](pkg/ondemand/)
 
 1. [Realtime V2 beta.](pkg/realtime/)
+
+1. [New SDK](pkg/api/)

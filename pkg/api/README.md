@@ -26,3 +26,5 @@ Also, to use the api you need to set the access token:
 clt := api.NewClient()
 clt.SetAccessToken("my_token")
 ```
+
+Please refer to the [interface](api.go#L59) definitions to see the full list of APIs.
