@@ -27,4 +27,4 @@ clt := api.NewClient()
 clt.SetAccessToken("my_token")
 ```
 
-Please refer to the [interface](api.go#L59) definitions to see the full list of APIs.
+Please refer to the [interface](api.go#L59-L167) definitions to see the full list of APIs.
