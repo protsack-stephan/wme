@@ -1,4 +1,4 @@
-# Wikimedia Enterprise v2 API(s) SDK
+# Wikimedia Enterprise APIs SDK
 
 Intended to jump start you with the using of the API(s).
 
