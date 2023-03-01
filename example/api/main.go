@@ -50,7 +50,7 @@ func main() {
 
 	crq := &api.Request{
 		Fields: []string{"name", "identifier"},
-		Filters: []*schema.Filter{
+		Filters: []*api.Filter{
 			{
 				Field: "identifier",
 				Value: "wiki",
@@ -63,7 +63,7 @@ func main() {
 
 	lrq := &api.Request{
 		Fields: []string{"name", "identifier"},
-		Filters: []*schema.Filter{
+		Filters: []*api.Filter{
 			{
 				Field: "identifier",
 				Value: "en",
@@ -76,7 +76,7 @@ func main() {
 
 	prq := &api.Request{
 		Fields: []string{"name", "identifier"},
-		Filters: []*schema.Filter{
+		Filters: []*api.Filter{
 			{
 				Field: "identifier",
 				Value: "enwiki",
@@ -89,7 +89,7 @@ func main() {
 
 	nrq := &api.Request{
 		Fields: []string{"name", "identifier", "description"},
-		Filters: []*schema.Filter{
+		Filters: []*api.Filter{
 			{
 				Field: "identifier",
 				Value: 0,
@@ -101,7 +101,7 @@ func main() {
 	printrs(clt.GetNamespace(ctx, 6, nrq))
 
 	brq := &api.Request{
-		Filters: []*schema.Filter{
+		Filters: []*api.Filter{
 			{
 				Field: "in_language.identifier",
 				Value: "en",
@@ -129,7 +129,7 @@ func main() {
 	}
 
 	srq := &api.Request{
-		Filters: []*schema.Filter{
+		Filters: []*api.Filter{
 			{
 				Field: "in_language.identifier",
 				Value: "en",

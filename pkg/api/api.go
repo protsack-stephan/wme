@@ -23,6 +23,15 @@ import (
 
 const dateFormat = "2006-01-02"
 
+// Filter represents a filter to be applied to a dataset.
+type Filter struct {
+	// Field specifies the field in the dataset that the filter should be applied to.
+	Field string `json:"field"`
+
+	// Value specifies the value that the field should be compared to.
+	Value interface{} `json:"value"`
+}
+
 // ReadCallback is a function that will be called with each Article object that is read from a batch or snapshot.
 // You can return a custom error to stop the reading.
 type ReadCallback func(art *schema.Article) error
@@ -40,7 +49,7 @@ type Request struct {
 
 	// Filters represents a list of filters to apply to the response.
 	// This is an optional argument.
-	Filters []*schema.Filter `json:"filters,omitempty"`
+	Filters []*Filter `json:"filters,omitempty"`
 
 	// Limits the amount of results from the API (for now works only with Articles API).
 	// This is an optional argument.

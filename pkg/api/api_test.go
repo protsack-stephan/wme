@@ -229,12 +229,6 @@ func (s *apiTestSuite) TestGetBatch() {
 	}
 }
 
-func (s *apiTestSuite) TestHeadBatch() {}
-
-func (s *apiTestSuite) TestReadBatch() {}
-
-func (s *apiTestSuite) TestDownloadBatch() {}
-
 func (s *apiTestSuite) TestGetSnapshots() {
 	sps, err := s.clt.GetSnapshots(s.ctx, s.req)
 
@@ -259,12 +253,6 @@ func (s *apiTestSuite) TestGetSnapshot() {
 	}
 }
 
-func (s *apiTestSuite) TestHeadSnapshot() {}
-
-func (s *apiTestSuite) TestReadSnapshot() {}
-
-func (s *apiTestSuite) TestDownloadSnapshot() {}
-
 func (s *apiTestSuite) TestGetArticles() {
 	ats, err := s.clt.GetArticles(s.ctx, s.anm, s.req)
 
@@ -276,10 +264,6 @@ func (s *apiTestSuite) TestGetArticles() {
 		s.Assert().NotEmpty(ats)
 	}
 }
-
-func (s *apiTestSuite) TestStreamArticles() {}
-
-func (s *apiTestSuite) TestReadAll() {}
 
 func TestAPI(t *testing.T) {
 	for _, testCase := range []*apiTestSuite{
