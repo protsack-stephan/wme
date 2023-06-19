@@ -69,7 +69,7 @@ func main() {
 			Parts:  []int{0, 1}, // Will connect to partitions 0 through 9
 			// API will pick offsets for relevant partitions (0 through 9); for other partitions API will return messages from the earliest available
 			// API will ignore irrelevant partitions in offset.
-			Offsets: map[int]int{19: 1, 22: 1, 15: 1, 21: 1, 33: 1, 38: 1, 44: 1, 3: 1, 5: 1, 7: 1, 34: 1, 13: 1, 24: 1, 30: 1, 20: 1, 25: 1, 39: 1, 42: 1, 145: 1, 4: 1, 14: 1, 18: 1, 146: 1, 47: 1, 29: 1, 40: 1, 41: 1, 43: 1, 149: 1, 9: 1, 27: 1, 28: 1, 10: 1, 31: 1, 36: 1, 37: 1, 0: 1, 1: 1, 2: 1},
+			Offsets: map[int]int64{19: 1, 22: 1, 15: 1, 21: 1, 33: 1, 38: 1, 44: 1, 3: 1, 5: 1, 7: 1, 34: 1, 13: 1, 24: 1, 30: 1, 20: 1, 25: 1, 39: 1, 42: 1, 145: 1, 4: 1, 14: 1, 18: 1, 146: 1, 47: 1, 29: 1, 40: 1, 41: 1, 43: 1, 149: 1, 9: 1, 27: 1, 28: 1, 10: 1, 31: 1, 36: 1, 37: 1, 0: 1, 1: 1, 2: 1},
 			Filters: []realtime.Filter{
 				{
 					Field: "is_part_of.identifier",
