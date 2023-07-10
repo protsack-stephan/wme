@@ -209,8 +209,8 @@ func NewClient(ops ...func(clt *Client)) API {
 		DownloadChunkSize:    5242880 * 5,
 		DownloadConcurrency:  10,
 		UserAgent:            "",
-		BaseUrl:              "https://api-beta.enterprise.wikimedia.com/",
-		RealtimeURL:          "https://realtime-beta.enterprise.wikimedia.com/",
+		BaseUrl:              "https://api.enterprise.wikimedia.com/",
+		RealtimeURL:          "https://realtime.enterprise.wikimedia.com/",
 	}
 
 	for _, opt := range ops {
