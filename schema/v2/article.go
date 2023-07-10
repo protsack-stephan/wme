@@ -82,17 +82,9 @@ type Article struct {
 // Image schema for article image.
 // Compliant with https://schema.org/ImageObject,
 type Image struct {
-	ContentUrl string     `json:"content_url,omitempty" avro:"contentUrl"`
-	Thumbnail  *Thumbnail `json:"-" avro:"thumbnail"`
-	Width      int        `json:"width,omitempty" avro:"width"`
-	Height     int        `json:"height,omitempty" avro:"height"`
-}
-
-// Thumbnail schema for article thumbnail.
-type Thumbnail struct {
-	ContentUrl string `json:"content_url,omitempty"`
-	Width      int    `json:"width,omitempty"`
-	Height     int    `json:"height,omitempty"`
+	ContentUrl string `json:"content_url,omitempty" avro:"contentUrl"`
+	Width      int    `json:"width,omitempty" avro:"width"`
+	Height     int    `json:"height,omitempty" avro:"height"`
 }
 
 // Category article category representation.
