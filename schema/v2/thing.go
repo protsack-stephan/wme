@@ -38,6 +38,45 @@ type Thing struct {
 	// InLanguage is the language of the thing (article).
 	InLanguage *Language `json:"in_language,omitempty"`
 
+	// HasParts are the parts included inside the thing (article).
+	HasParts []*ThingPart `json:"has_parts,omitempty"`
+
 	// Image specifies the image related to the thing (article).
 	Image *Image `json:"image,omitempty"`
+}
+
+// ThingPart represents a part of a thing (section, field etc.).
+type ThingPart struct {
+	// Name is the name of the part.
+	Name string `json:"name,omitempty"`
+
+	// Type is the type of the part, for example 'field' or 'section'.
+	Type string `json:"type,omitempty"`
+
+	// Value is the value of the part.
+	Value string `json:"value,omitempty"`
+
+	// Values are the values of the part (if there are are more than single value).
+	Values []string `json:"values,omitempty"`
+
+	// Images are the images included inside the part.
+	Images []*Image `json:"images,omitempty"`
+
+	// Links are the links included inside the part.
+	Links []*Link `json:"links,omitempty"`
+
+	// HasParts are the parts included inside the part (recursively parts can contain parts).
+	HasParts []*ThingPart `json:"has_parts,omitempty"`
+}
+
+// Link represents a link that can be found on a Wikipedia page.
+type Link struct {
+	// URL is the URL of the link.
+	URL string `json:"url,omitempty"`
+
+	// Text is the text of the link.
+	Text string `json:"text,omitempty"`
+
+	// Images are the images included inside  the link.
+	Images []*Image `json:"images,omitempty"`
 }
