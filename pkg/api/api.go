@@ -151,6 +151,11 @@ type ArticlesGetter interface {
 	GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error)
 }
 
+// ThingsGetter is an interface for getting a lits of things by name.
+type ThingsGetter interface {
+	GetThings(ctx context.Context, nme string, req *Request) ([]*schema.Thing, error)
+}
+
 // ArticlesStreamer is an interface for getting all the article changes in realtime.
 type ArticlesStreamer interface {
 	StreamArticles(ctx context.Context, req *Request, cbk ReadCallback) error
@@ -191,6 +196,7 @@ type API interface {
 	AccessTokenSetter
 	ArticlesGetter
 	ArticlesStreamer
+	ThingsGetter
 }
 
 // NewClient returns a new instance of the Client that implements the API interface.
@@ -637,6 +643,12 @@ func (c *Client) DownloadSnapshot(ctx context.Context, idr string, wsk io.WriteS
 func (c *Client) GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error) {
 	ats := []*schema.Article{}
 	return ats, c.getEntity(ctx, req, fmt.Sprintf("articles/%s", nme), &ats)
+}
+
+// GetThings retrieves "things" from the API based on the given name and request parameters.
+func (c *Client) GetThings(ctx context.Context, nme string, req *Request) ([]*schema.Thing, error) {
+	ats := []*schema.Thing{}
+	return ats, c.getEntity(ctx, req, fmt.Sprintf("things/%s", nme), &ats)
 }
 
 // StreamArticles streams all available articles from the server and applies a callback function to each article

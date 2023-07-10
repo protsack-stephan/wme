@@ -76,6 +76,7 @@ type Article struct {
 	// Event specifies the event related to the article.
 	Event *Event `json:"event,omitempty"`
 
+	// Image specifies the image related to the article.
 	Image *Image `json:"image,omitempty"`
 }
 

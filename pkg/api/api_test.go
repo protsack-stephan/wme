@@ -52,6 +52,8 @@ type apiTestSuite struct {
 	sts int
 	act string
 	err error
+	tnm string
+	tgs string
 }
 
 func (s *apiTestSuite) createAPIServer() http.Handler {
@@ -76,6 +78,7 @@ func (s *apiTestSuite) createAPIServer() http.Handler {
 	rtr.HandleFunc(fmt.Sprintf("/v2/snapshots/%s", s.sid), createHandler(s.sts, s.spt))
 
 	rtr.HandleFunc(fmt.Sprintf("/v2/articles/%s", s.anm), createHandler(s.sts, s.ats))
+	rtr.HandleFunc(fmt.Sprintf("/v2/things/%s", s.tnm), createHandler(s.sts, s.tgs))
 
 	return rtr
 }
@@ -262,6 +265,18 @@ func (s *apiTestSuite) TestGetArticles() {
 	} else {
 		s.Assert().NoError(err)
 		s.Assert().NotEmpty(ats)
+	}
+}
+
+func (s *apiTestSuite) TestGetThings() {
+	tgs, err := s.clt.GetThings(s.ctx, s.tnm, s.req)
+
+	if s.err != nil {
+		s.Assert().Error(err)
+		s.Assert().Empty(tgs)
+	} else {
+		s.Assert().NoError(err)
+		s.Assert().NotEmpty(tgs)
 	}
 }
 
@@ -481,6 +496,21 @@ func TestAPI(t *testing.T) {
 				},
 				{
 					"name": "Earth",
+					"is_part_of": {
+						"identifier": "enwikinews"
+					}
+				}
+			]`,
+			tnm: "Ninja",
+			tgs: `[
+				{
+					"name": "Ninja",
+					"is_part_of": {
+						"identifier": "enwiki"
+					}
+				},
+				{
+					"name": "Ninja",
 					"is_part_of": {
 						"identifier": "enwikinews"
 					}
