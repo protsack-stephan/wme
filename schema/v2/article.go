@@ -75,6 +75,24 @@ type Article struct {
 
 	// Event specifies the event related to the article.
 	Event *Event `json:"event,omitempty"`
+
+	Image *Image `json:"image,omitempty"`
+}
+
+// Image schema for article image.
+// Compliant with https://schema.org/ImageObject,
+type Image struct {
+	ContentUrl string     `json:"content_url,omitempty" avro:"contentUrl"`
+	Thumbnail  *Thumbnail `json:"-" avro:"thumbnail"`
+	Width      int        `json:"width,omitempty" avro:"width"`
+	Height     int        `json:"height,omitempty" avro:"height"`
+}
+
+// Thumbnail schema for article thumbnail.
+type Thumbnail struct {
+	ContentUrl string `json:"content_url,omitempty"`
+	Width      int    `json:"width,omitempty"`
+	Height     int    `json:"height,omitempty"`
 }
 
 // Category article category representation.

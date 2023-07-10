@@ -506,8 +506,8 @@ func (c *Client) downloadEntity(ctx context.Context, pth string, wrr io.WriteSee
 	return nil
 }
 
-func (c *Client) subscribeToEntity(ctx context.Context, pth string, cbk ReadCallback) error {
-	hrq, err := c.newRequest(ctx, c.RealtimeURL, http.MethodGet, pth, nil)
+func (c *Client) subscribeToEntity(ctx context.Context, pth string, req *Request, cbk ReadCallback) error {
+	hrq, err := c.newRequest(ctx, c.RealtimeURL, http.MethodGet, pth, req)
 
 	if err != nil {
 		return err
@@ -642,7 +642,7 @@ func (c *Client) GetArticles(ctx context.Context, nme string, req *Request) ([]*
 // StreamArticles streams all available articles from the server and applies a callback function to each article
 // as they arrive. The callback function must implement the ReadCallback interface.
 func (c *Client) StreamArticles(ctx context.Context, req *Request, cbk ReadCallback) error {
-	return c.subscribeToEntity(ctx, "articles", cbk)
+	return c.subscribeToEntity(ctx, "articles", req, cbk)
 }
 
 // ReadAll reads the contents of the given io.Reader and calls the given ReadCallback function
