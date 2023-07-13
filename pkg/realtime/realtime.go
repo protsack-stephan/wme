@@ -22,9 +22,12 @@ type Filter struct {
 
 // ArticlesRequest request for filtering and fields in realtime API.
 type ArticlesRequest struct {
-	Since   time.Time `json:"since,omitempty"`
-	Fields  []string  `json:"fields,omitempty"`
-	Filters []Filter  `json:"filters,omitempty"`
+	Since             time.Time         `json:"since,omitempty"`
+	Fields            []string          `json:"fields,omitempty"`
+	Filters           []Filter          `json:"filters,omitempty"`
+	Parts             []int             `json:"parts,omitempty"`
+	Offsets           map[int]int64     `json:"offsets,omitempty"`
+	SincePerPartition map[int]time.Time ` json:"since_per_partition,omitempty"`
 }
 
 // NewClient create new realtime client.
