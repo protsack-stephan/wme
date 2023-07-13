@@ -75,6 +75,28 @@ type Article struct {
 
 	// Event specifies the event related to the article.
 	Event *Event `json:"event,omitempty"`
+
+	// Image specifies the image related to the article.
+	Image *Image `json:"image,omitempty"`
+}
+
+// Image schema for article image.
+// Compliant with https://schema.org/ImageObject,
+type Image struct {
+	// ContentUrl is the URL of the image.
+	ContentUrl string `json:"content_url,omitempty" avro:"contentUrl"`
+
+	// Width is the width of the image.
+	Width int `json:"width,omitempty" avro:"width"`
+
+	// Height is the height of the image.
+	Height int `json:"height,omitempty" avro:"height"`
+
+	// AlternativeText is the alternative text of the image.
+	AlternativeText string `json:"alternative_text,omitempty"`
+
+	// Caption is the caption of the image.
+	Caption string `json:"caption,omitempty"`
 }
 
 // Category article category representation.

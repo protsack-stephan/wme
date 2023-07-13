@@ -14,6 +14,7 @@ type Version struct {
 	Tags                []string `json:"tags,omitempty"`
 	IsMinorEdit         bool     `json:"is_minor_edit,omitempty"`
 	IsFlaggedStable     bool     `json:"is_flagged_stable,omitempty"`
+	IsBreakingNews      bool     `json:"is_breaking_news,omitempty"`
 	HasTagNeedsCitation bool     `json:"has_tag_needs_citation,omitempty"`
 	Scores              *Scores  `json:"scores,omitempty"`
 	Editor              *Editor  `json:"editor,omitempty"`

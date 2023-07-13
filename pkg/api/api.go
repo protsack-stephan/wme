@@ -151,6 +151,11 @@ type ArticlesGetter interface {
 	GetArticles(ctx context.Context, nme string, req *Request) ([]*schema.Article, error)
 }
 
+// ThingsGetter is an interface for getting a lits of things by name.
+type ThingsGetter interface {
+	GetThings(ctx context.Context, nme string, req *Request) ([]*schema.Thing, error)
+}
+
 // ArticlesStreamer is an interface for getting all the article changes in realtime.
 type ArticlesStreamer interface {
 	StreamArticles(ctx context.Context, req *Request, cbk ReadCallback) error
@@ -191,6 +196,7 @@ type API interface {
 	AccessTokenSetter
 	ArticlesGetter
 	ArticlesStreamer
+	ThingsGetter
 }
 
 // NewClient returns a new instance of the Client that implements the API interface.
@@ -203,8 +209,8 @@ func NewClient(ops ...func(clt *Client)) API {
 		DownloadChunkSize:    5242880 * 5,
 		DownloadConcurrency:  10,
 		UserAgent:            "",
-		BaseUrl:              "https://api-beta.enterprise.wikimedia.com/",
-		RealtimeURL:          "https://realtime-beta.enterprise.wikimedia.com/",
+		BaseUrl:              "https://api.enterprise.wikimedia.com/",
+		RealtimeURL:          "https://realtime.enterprise.wikimedia.com/",
 	}
 
 	for _, opt := range ops {
@@ -506,8 +512,8 @@ func (c *Client) downloadEntity(ctx context.Context, pth string, wrr io.WriteSee
 	return nil
 }
 
-func (c *Client) subscribeToEntity(ctx context.Context, pth string, cbk ReadCallback) error {
-	hrq, err := c.newRequest(ctx, c.RealtimeURL, http.MethodGet, pth, nil)
+func (c *Client) subscribeToEntity(ctx context.Context, pth string, req *Request, cbk ReadCallback) error {
+	hrq, err := c.newRequest(ctx, c.RealtimeURL, http.MethodGet, pth, req)
 
 	if err != nil {
 		return err
@@ -639,10 +645,16 @@ func (c *Client) GetArticles(ctx context.Context, nme string, req *Request) ([]*
 	return ats, c.getEntity(ctx, req, fmt.Sprintf("articles/%s", nme), &ats)
 }
 
+// GetThings retrieves "things" from the API based on the given name and request parameters.
+func (c *Client) GetThings(ctx context.Context, nme string, req *Request) ([]*schema.Thing, error) {
+	ats := []*schema.Thing{}
+	return ats, c.getEntity(ctx, req, fmt.Sprintf("things/%s", nme), &ats)
+}
+
 // StreamArticles streams all available articles from the server and applies a callback function to each article
 // as they arrive. The callback function must implement the ReadCallback interface.
 func (c *Client) StreamArticles(ctx context.Context, req *Request, cbk ReadCallback) error {
-	return c.subscribeToEntity(ctx, "articles", cbk)
+	return c.subscribeToEntity(ctx, "articles", req, cbk)
 }
 
 // ReadAll reads the contents of the given io.Reader and calls the given ReadCallback function
